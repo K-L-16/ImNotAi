@@ -3,6 +3,7 @@ import { HomeView } from '../views/HomeView';
 import { CreateRoomView } from '../views/CreateRoomView';
 import { JoinRoomView } from '../views/JoinRoomView';
 import { RoomView } from '../views/RoomView'
+import { AskPremiseView } from '../views/AskPremiseView';
 
 const routes = [
   {
@@ -16,6 +17,10 @@ const routes = [
   {
     path: '/join-room',
     element: <JoinRoomView />
+  },
+  {
+    path: '/ask-premise',
+    element: <AskPremiseView />
   },
   {
     path: '/room/:roomCode',
