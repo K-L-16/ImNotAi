@@ -25,7 +25,7 @@ const JoinRoomForm = () => {
       .post(`/${useRoom.getState().room.roomCode}/join`)
       .then(response => {
         if (response.data.code == '1') {
-          navigate(`/room/${useRoom.getState().room.roomCode}`);
+          navigate(`/waiting-hall/${useRoom.getState().room.roomCode}`);
         } else {
           setError(response.data.msg);
         }

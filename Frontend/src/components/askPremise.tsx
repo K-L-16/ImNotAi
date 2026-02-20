@@ -21,7 +21,7 @@ const AskPremise = () => {
           createPlayer(response.data.data.playerId, response.data.data.isHost);
           hostGame();
           setRoom(response.data.data.roomCode);
-          navigate('/create-room');
+          navigate(`/waiting-hall/${useRoom.getState().room.roomCode}`);
         } else {
           setError(response.data.msg);
         }
