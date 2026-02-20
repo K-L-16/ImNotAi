@@ -1,10 +1,11 @@
 import { useNavigate } from 'react-router';
+import { useRoom } from '../stores/useRoom';
 
 export const JoinRoomButton = () => {
-    const navigate = useNavigate();
-    const handleClick = () => {
-        navigate("/join-room");
-    }
+  const navigate = useNavigate();
+  const handleClick = () => {
+    navigate('/join-room');
+  };
   return (
     <>
       <button onClick={handleClick}>Join Room</button>
@@ -12,19 +13,21 @@ export const JoinRoomButton = () => {
   );
 };
 
-const JoinRoomCodeEnter = () => {
+const JoinRoomForm = () => {
+  const navigate = useNavigate();
+  const { setRoom } = useRoom();
+  const handleSubmit = (ev: React.FormEvent<HTMLFormElement>) => {
+    ev.preventDefault();
+    navigate(`/room/${useRoom.getState().room.roomCode}`);
+  };
   return (
-    <>
-      <input type="text" placeholder="enter your code here:"></input>
-    </>
-  );
-};
-
-const JoinButton = () => {
-  return (
-    <>
-      <button>Join</button>
-    </>
+    <form onSubmit={handleSubmit}>
+      <input
+        type="text"
+        placeholder="enter your code here:"
+        onChange={ev => setRoom(ev.target.value)}></input>
+      <button type="submit">Join</button>
+    </form>
   );
 };
 
@@ -43,8 +46,7 @@ const CancelButton = () => {
 export const JoinRoomPage = () => {
   return (
     <>
-      <JoinRoomCodeEnter />
-      <JoinButton />
+      <JoinRoomForm />
       <CancelButton />
     </>
   );
