@@ -1,5 +1,7 @@
 import { useNavigate } from 'react-router';
 import { useRoom } from '../stores/useRoom';
+import { api } from '../stores/api';
+import { useError } from '../stores/useError';
 
 export const JoinRoomButton = () => {
   const navigate = useNavigate();
@@ -16,9 +18,21 @@ export const JoinRoomButton = () => {
 const JoinRoomForm = () => {
   const navigate = useNavigate();
   const { setRoom } = useRoom();
+  const { setError } = useError();
   const handleSubmit = (ev: React.FormEvent<HTMLFormElement>) => {
     ev.preventDefault();
-    navigate(`/room/${useRoom.getState().room.roomCode}`);
+    api
+      .post(`/${useRoom.getState().room.roomCode}/join`)
+      .then(response => {
+        if (response.data.code == '1') {
+          navigate(`/room/${useRoom.getState().room.roomCode}`);
+        } else {
+          setError(response.data.msg);
+        }
+      })
+      .catch((error: any) => {
+        setError(error.message);
+      });
   };
   return (
     <form onSubmit={handleSubmit}>
@@ -27,6 +41,9 @@ const JoinRoomForm = () => {
         placeholder="enter your code here:"
         onChange={ev => setRoom(ev.target.value)}></input>
       <button type="submit">Join</button>
+      {useError.getState().error != ' ' && (
+        <p>Oops, something goes wrong - {useError.getState().error}</p>
+      )}
     </form>
   );
 };
