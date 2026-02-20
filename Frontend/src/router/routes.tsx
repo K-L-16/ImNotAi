@@ -1,10 +1,15 @@
 import { createBrowserRouter } from 'react-router';
-import { HomePage } from '../views/HomeView';
+import { HomeView } from '../views/HomeView';
+import { CreateRoomView } from '../views/CreateRoomView';
 
 const routes = [
   {
     path: '/',
-    element: <HomePage />
-  }
+    element: <HomeView />
+  },
+  {
+    path: '/create-room',
+    element: <CreateRoomView />
+  },
 ];
 export const router = createBrowserRouter(routes);
