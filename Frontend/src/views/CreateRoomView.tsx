@@ -1,9 +1,9 @@
-import { CreateRoomPage } from "../components/createRoom"
+import { CreateRoomPage } from '../components/createRoom';
 
 export const CreateRoomView = () => {
-    return(
-        <>
-        <CreateRoomPage />
-        </>
-    )
-}
+  return (
+    <>
+      <CreateRoomPage />
+    </>
+  );
+};

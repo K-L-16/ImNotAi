@@ -1,10 +1,10 @@
-import { useNavigate } from "react-router";
+import { useNavigate } from 'react-router';
 
 export const CreateRoomButton = () => {
-    const navigate = useNavigate();
-    const handleClick = () => {
-        navigate("/create-room")
-    }
+  const navigate = useNavigate();
+  const handleClick = () => {
+    navigate('/create-room');
+  };
   return (
     <>
       <button onClick={handleClick}>Create Room</button>
@@ -31,21 +31,23 @@ const StartButton = () => {
 };
 
 const CancelButton = () => {
-    const navigate = useNavigate();
-    const handleClick = () => {
-        navigate("/")
-    }
-    return(
-        <>
-        <button onClick={handleClick}>Cancel</button>
-        </>
-    )
-}
+  const navigate = useNavigate();
+  const handleClick = () => {
+    navigate('/');
+  };
+  return (
+    <>
+      <button onClick={handleClick}>Cancel</button>
+    </>
+  );
+};
 
 export const CreateRoomPage = () => {
-  return <>
-    <CreateRoomInfo />
-    <StartButton />
-    <CancelButton />
-  </>;
+  return (
+    <>
+      <CreateRoomInfo />
+      <StartButton />
+      <CancelButton />
+    </>
+  );
 };
