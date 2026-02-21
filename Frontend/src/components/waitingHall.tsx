@@ -88,9 +88,9 @@ export const WaitingHallPage = () => {
   //   setPremise
   // } = useGameStatus();
   useEffect(() => {
-    connect(
-      `${import.meta.env.VITE_API_URL}/ws?roomCode=${useRoom.getState().room.roomCode}&playerId=${usePlayer.getState().player.playerID}`
-    );
+    // connect(
+    //   `${import.meta.env.VITE_API_URL}/ws?roomCode=${useRoom.getState().room.roomCode}&playerId=${usePlayer.getState().player.playerID}`
+    // );
     useClient.getState().client!.onConnect = () => {
       const roomCode = useGameStatus.getState().gameStatus.roomCode;
       // listen to game status change
