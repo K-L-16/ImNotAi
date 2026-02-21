@@ -21,32 +21,35 @@ const MessageOutput = () => {
   const messages = roundStatus.messages;
   const { visibleMessages, addVisibleMessage, resetVisibleMessage } =
     useMessages();
+  const { gameStatus } = useGameStatus();
   useEffect(() => {
     resetVisibleMessage();
   }, []);
   useEffect(() => {
-    let idx = 0;
-    const timer = setInterval(() => {
-      addVisibleMessage(messages[idx]);
-      idx++;
-      if (idx >= messages.length) {
+    if (useGameStatus.getState().gameStatus.status == 'VOTING') {
+      let idx = 0;
+      const timer = setInterval(() => {
+        addVisibleMessage(messages[idx]);
+        idx++;
+        if (idx >= messages.length) {
+          clearInterval(timer);
+        }
+      }, 1000);
+      return () => {
         clearInterval(timer);
-      }
-    }, 1000);
-    return () => {
-      clearInterval(timer);
-    };
-  }, [messages]);
+      };
+    }
+  }, [useGameStatus.getState().gameStatus.status]);
   return (
     <>
       <div>
-        {messages.length == 0
-          ? 'no messages yet...'
-          : visibleMessages.map((message, index) => (
+        {gameStatus.status == 'VOTING'
+          ? visibleMessages.map((message, index) => (
               <div key={index}>
                 anonymous player {index + 1}: {message.text}
               </div>
-            ))}
+            ))
+          : 'no messages yet...'}
       </div>
     </>
   );
