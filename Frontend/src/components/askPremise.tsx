@@ -31,13 +31,22 @@ const AskPremise = () => {
       });
   };
   return (
-    <form onSubmit={handleSubmit}>
+    <form
+      onSubmit={handleSubmit}
+      className="flex-wrap relative w-screen mt-70 justify-center ">
       <input
         type="text"
+        id="inputPremise"
         required
-        placeholder="please enter a premise here: "
+        placeholder="Please enter a premise here (required): "
+        className="block p-2 h-10 w-screen text-center bg-linear-to-br from-gray-100 to-gray-200 font-mono"
         onChange={ev => setPremise(ev.target.value)}></input>
-      <button type="submit">Submit</button>
+      <div className="block w-auto h-0.5 bg-black"></div>
+      <button
+        type="submit"
+        className="absolute left-[60%] w-50 h-fit mt-7 py-3 rounded-xl bg-green-500 hover:bg-green-400 active:bg-green-400 hover:scale-110 shadow-[8px_8px_16px_gray,inset_-8px_-8px_16px_green] active:shadow-[inset_8px_8px_16px_green] active:translate-y-1 cursor-pointer text-3xl font-mono text-white text-shadow-black ">
+        Submit
+      </button>
       {useError.getState().error != ' ' && (
         <p>Oops, something goes wrong - {useError.getState().error}</p>
       )}
@@ -52,7 +61,11 @@ const CancelButton = () => {
   };
   return (
     <>
-      <button onClick={handleClick}>Cancel</button>
+      <button
+        onClick={handleClick}
+        className="absolute left-[28%] w-50 h-fit mt-7 py-3 rounded-xl bg-red-400 hover:bg-[#ff7575] active:bg-[#ff7575] hover:scale-110 shadow-[8px_8px_16px_gray,inset_-8px_-8px_16px_red] active:shadow-[inset_8px_8px_16px_red] active:translate-y-1 cursor-pointer text-3xl font-mono text-white text-shadow-black ">
+        Cancel
+      </button>
     </>
   );
 };
