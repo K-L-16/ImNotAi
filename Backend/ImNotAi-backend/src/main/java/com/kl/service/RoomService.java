@@ -41,14 +41,6 @@ public class RoomService {
         return sb.toString();
     }
 
-    /**
-     * get the code from
-     * @param code
-     * @return
-     */
-    public Room getRoom(String code) {
-        return rooms.get(code);
-    }
 
     /**
      * generate the room for the player and return the map obj
@@ -280,21 +272,6 @@ public class RoomService {
         System.out.println("广播 round-messages: room=" + room.getCode());
     }
 
-    /**
-     * only userd fo test
-     */
-    private String generateAiMessage(Room room) {
-
-        String[] canned = {
-                "I think that's reasonable.",
-                "Can you explain more?",
-                "I'm not sure I agree.",
-                "That reminds me of something.",
-                "Let's focus on the key point."
-        };
-
-        return canned[1];
-    }
 
     /**
      * SUBMIT VOTE
