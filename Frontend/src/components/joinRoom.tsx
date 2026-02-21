@@ -57,7 +57,7 @@ const JoinRoomForm = () => {
         Join
       </button>
       {useError.getState().error != ' ' && (
-        <p>Oops, something goes wrong - {useError.getState().error}</p>
+        <p className="absolute w-screen text-center left-1/2 -translate-x-1/2 font-mono">Oops, something goes wrong - {useError.getState().error}</p>
       )}
     </form>
   );
