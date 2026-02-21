@@ -1,3 +1,3 @@
-export interface Room{
-    roomCode: string;
+export interface Room {
+  roomCode: string;
 }

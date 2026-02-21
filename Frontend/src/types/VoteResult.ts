@@ -1,4 +1,4 @@
-import type { VoteCount } from "./VoteCount";
+import type { VoteCount } from './VoteCount';
 
 export interface VoteResult {
   voteRound: number;

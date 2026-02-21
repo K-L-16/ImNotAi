@@ -1,7 +1,7 @@
 import { createBrowserRouter } from 'react-router';
 import { HomeView } from '../views/HomeView';
 import { JoinRoomView } from '../views/JoinRoomView';
-import { RoomView } from '../views/RoomView'
+import { RoomView } from '../views/RoomView';
 import { AskPremiseView } from '../views/AskPremiseView';
 import { WaitingHallView } from '../views/WaitingHallView';
 

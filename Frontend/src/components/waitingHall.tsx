@@ -10,11 +10,6 @@ import { useTerminateStatus } from '../stores/useTerminateStatus';
 
 const GameInfo = () => {
   const { gameStatus } = useGameStatus();
-  useEffect(() => {
-    useGameStatus.getState().setMaxPlayers(4);
-    useGameStatus.getState().setPlayerCount(2);
-    useGameStatus.getState().setRoomCode('1234567890');
-  }, []);
   return (
     <>
       <div className="grid grid-cols-4 grid-rows-3 w-[85%] h-1/2 mx-auto mt-20">
@@ -34,25 +29,25 @@ const GameInfo = () => {
 };
 
 const StartButton = () => {
-  const { setRoom } = useRoom();
   const {} = useClient();
   const {} = useGameStatus();
   const {} = usePlayer();
   const navigate = useNavigate();
   const playerID = usePlayer.getState().player.playerID;
-  useEffect(() => {
-    setRoom('12345');
-  }, []);
   const handleClick = () => {
-    useClient.getState().client!.publish({
-      destination: `app/room/${useGameStatus.getState().gameStatus.roomCode}/action`,
-      body: JSON.stringify({
-        type: 'START',
-        playerID,
-        payload: {}
-      })
-    });
-    navigate(`/room/${useRoom.getState().room.roomCode}`);
+    if (useGameStatus.getState().gameStatus.playerCount >= 2) {
+      useClient.getState().client!.publish({
+        destination: `app/room/${useGameStatus.getState().gameStatus.roomCode}/action`,
+        body: JSON.stringify({
+          type: 'START',
+          playerID,
+          payload: {}
+        })
+      });
+      navigate(`/room/${useRoom.getState().room.roomCode}`);
+    } else {
+      alert('Ooooops, you must have 2 or more player to start a game!');
+    }
   };
   return (
     <div className="flex w-screen justify-center">

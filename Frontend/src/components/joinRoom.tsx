@@ -12,7 +12,8 @@ export const JoinRoomButton = () => {
   return (
     <>
       <button
-        className="absolute left-[55%] p-3 my-3 w-60 rounded-3xl bg-blue-300 text-3xl text-white cursor-pointer hover:scale-110 hover:bg-[#a8d6ff] shadow-[8px_8px_20px_gray,inset_-8px_-8px_8px_#4987b3,inset_6px_6px_16px_white] active:shadow-[inset_8px_8px_8px_#4987b3] active:translate-y-1 duration-300"        onClick={handleClick}>
+        className="absolute left-[55%] p-3 my-3 w-60 rounded-3xl bg-blue-300 text-3xl text-white cursor-pointer hover:scale-110 hover:bg-[#a8d6ff] shadow-[8px_8px_20px_gray,inset_-8px_-8px_8px_#4987b3,inset_6px_6px_16px_white] active:shadow-[inset_8px_8px_8px_#4987b3] active:translate-y-1 duration-300"
+        onClick={handleClick}>
         Join Room
       </button>
     </>
@@ -29,7 +30,7 @@ const JoinRoomForm = () => {
     api
       .post(`/${useRoom.getState().room.roomCode}/join`)
       .then(response => {
-        if (response.data.code == '1') {
+        if (response.data.code == 1) {
           createPlayer(response.data.data.playerId, response.data.data.isHost);
           navigate(`/waiting-hall/${useRoom.getState().room.roomCode}`);
         } else {

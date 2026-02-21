@@ -17,7 +17,7 @@ const AskPremise = () => {
     api
       .post('/api/rooms', { premise: usePremise.getState().premise })
       .then(response => {
-        if (response.data.code == '1') {
+        if (response.data.code == 1) {
           createPlayer(response.data.data.playerId, response.data.data.isHost);
           hostGame();
           setRoom(response.data.data.roomCode);

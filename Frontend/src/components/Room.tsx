@@ -16,13 +16,6 @@ import {
 import { useTerminateStatus } from '../stores/useTerminateStatus';
 import { alertDisconnect } from '../utils/alertDisconnect';
 
-// const messages = [
-//   { playerID: '1', text: 'abcdefghijklmnopqrstuvwxyzabcd' },
-//   { playerID: '2', text: 'bbb' },
-//   { playerID: '3', text: 'ccc' },
-//   { playerID: '4', text: 'ddd' },
-//   { playerID: '5', text: 'eee' }
-// ];
 const MessageOutput = () => {
   const { roundStatus } = useRoundStatus();
   const messages = roundStatus.messages;
@@ -31,7 +24,6 @@ const MessageOutput = () => {
   const { gameStatus } = useGameStatus();
   useEffect(() => {
     resetVisibleMessage();
-    useGameStatus.getState().setStatus('VOTING');
   }, []);
   useEffect(() => {
     if (useGameStatus.getState().gameStatus.status == 'VOTING') {
@@ -128,17 +120,6 @@ const VoteInput = () => {
   const {} = useRoundStatus();
   const {} = useClient();
   const {} = useGameStatus();
-  // test code
-  // useEffect(() => {
-  //   usePlayer.getState().createPlayer('2', false);
-  //   useRoundStatus.getState().setMessages([
-  //     { playerID: '1', text: 'aaa' },
-  //     { playerID: '2', text: 'bbb' },
-  //     { playerID: '3', text: 'ccc' },
-  //     { playerID: '4', text: 'ddd' },
-  //     { playerID: '5', text: 'eee' }
-  //   ]);
-  // }, []);
   let playerNum = 0;
   const handleClick = (targetID: string) => {
     useClient.getState().client!.publish({
@@ -181,13 +162,6 @@ const VoteOutput = () => {
   const elimatedID = voteResult.elimatedID;
   const tie = voteResult.tie;
   const playerID = usePlayer.getState().player.playerID;
-  // let tie;
-  // let playerID;
-  // useEffect(() => {
-  //   tie = true;
-  //   playerID = player.playerID;
-  //   useGameStatus.getState().setStatus('ENDED');
-  // }, []);
   const { disconnect, unsubscribeAll } = useClient();
   const navigate = useNavigate();
   const handleClick = () => {
