@@ -176,8 +176,8 @@ const VoteInput = () => {
 
 const VoteOutput = () => {
   const { voteResult } = useVoteResult();
-  const { player } = usePlayer();
-  const { gameStatus } = useGameStatus();
+  const {} = usePlayer();
+  const {} = useGameStatus();
   const elimatedID = voteResult.elimatedID;
   const tie = voteResult.tie;
   const playerID = usePlayer.getState().player.playerID;
