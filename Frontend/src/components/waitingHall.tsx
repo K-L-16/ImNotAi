@@ -64,7 +64,7 @@ export const WaitingHallPage = () => {
     setMaxPlayers,
     setPremise
   } = useGameStatus();
-  const { connect, addSubscription } = useClient();
+  const { connect, addSubscription, unsubscribeAll } = useClient();
   useEffect(() => {
     connect(`${import.meta.env.BASE_URL}/ws`);
     useClient.getState().client!.onConnect = () => {
@@ -82,6 +82,9 @@ export const WaitingHallPage = () => {
             setPremise(state.premise);
           })
       );
+    };
+    return () => {
+      unsubscribeAll();
     };
   }, []);
   useEffect(() => {

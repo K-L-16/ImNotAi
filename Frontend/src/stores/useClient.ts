@@ -8,6 +8,7 @@ export const useClient = create<{
   connect: (url: string) => void;
   disconnect: () => void;
   addSubscription: (sub: StompSubscription) => void;
+  unsubscribeAll: () => void;
 }>((set, get) => ({
   client: null,
   subscriptions: [],
@@ -23,14 +24,19 @@ export const useClient = create<{
     }
   },
   disconnect: () => {
-    get().subscriptions.forEach(sub => {
-      sub.unsubscribe();
-    });
+    if (get().subscriptions.length != 0) {
+      get().unsubscribeAll();
+    }
     if (get().client != null) {
       get().client!.deactivate();
     }
   },
   addSubscription: (sub: StompSubscription) => {
     get().subscriptions.push(sub);
+  },
+  unsubscribeAll: () => {
+    get().subscriptions.forEach(sub => {
+      sub.unsubscribe();
+    });
   }
 }));
