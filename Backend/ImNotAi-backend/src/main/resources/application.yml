@@ -1,0 +1,9 @@
+spring:
+    application:
+        name: ImNotAi-backend
+
+openrouter:
+    apiKey: ${OPENROUTER_API_KEY}
+    baseUrl: https://openrouter.ai/api/v1
+    model: arcee-ai/trinity-large-preview:free
+    timeoutMs: 8000
