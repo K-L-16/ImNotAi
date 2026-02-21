@@ -43,12 +43,12 @@ const AskPremise = () => {
         id="inputPremise"
         required
         placeholder="Please enter a premise here (required): "
-        className="block p-2 h-10 w-screen text-center bg-linear-to-br from-gray-100 to-gray-200 font-mono"
+        className="block p-2 h-10 w-screen text-center bg-linear-to-r from-white via-gray-300 to-white focus:outline-none font-mono"
         onChange={ev => setPremise(ev.target.value)}></input>
-      <div className="block w-auto h-0.5 bg-black"></div>
+      <div className="block w-auto h-0.5 bg-linear-to-r from-gray-100 via-gray-500 to-gray-100"></div>
       <button
         type="submit"
-        className="absolute left-[60%] w-50 h-fit mt-7 py-3 rounded-xl bg-green-500 hover:bg-green-400 active:bg-green-400 hover:scale-110 shadow-[8px_8px_16px_gray,inset_-8px_-8px_16px_green] active:shadow-[inset_8px_8px_16px_green] active:translate-y-1 cursor-pointer text-3xl font-mono text-white text-shadow-black ">
+        className="absolute left-[60%] w-50 h-fit mt-7 py-3 rounded-xl bg-green-500 hover:bg-green-400 active:bg-green-400 hover:scale-110 shadow-[8px_8px_16px_gray,inset_-8px_-8px_16px_green] active:shadow-[inset_8px_8px_16px_green] active:translate-y-1 cursor-pointer text-3xl font-mono text-white duration-300">
         Submit
       </button>
       {useError.getState().error != ' ' && (
@@ -71,7 +71,7 @@ const CancelButton = () => {
     <>
       <button
         onClick={handleClick}
-        className="absolute left-[28%] w-50 h-fit mt-7 py-3 rounded-xl bg-red-400 hover:bg-[#ff7575] active:bg-[#ff7575] hover:scale-110 shadow-[8px_8px_16px_gray,inset_-8px_-8px_16px_red] active:shadow-[inset_8px_8px_16px_red] active:translate-y-1 cursor-pointer text-3xl font-mono text-white text-shadow-black ">
+        className="absolute left-[28%] w-50 h-fit mt-7 py-3 rounded-xl bg-red-400 hover:bg-[#ff7575] active:bg-[#ff7575] hover:scale-110 shadow-[8px_8px_16px_gray,inset_-8px_-8px_16px_red] active:shadow-[inset_8px_8px_16px_red] active:translate-y-1 cursor-pointer text-3xl font-mono text-white duration-300">
         Cancel
       </button>
     </>
