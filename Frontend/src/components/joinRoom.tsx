@@ -12,8 +12,7 @@ export const JoinRoomButton = () => {
   return (
     <>
       <button
-        className="absolute left-[55%] p-3 my-3 w-60 rounded-md bg-blue-300 text-3xl text-white cursor-pointer hover:scale-110 shadow-[8px_8px_20px_gray,inset_-8px_-8px_8px_#4987b3] active:shadow-[inset_8px_8px_8px_#4987b3] active:translate-y-1 duration-300"
-        onClick={handleClick}>
+        className="absolute left-[55%] p-3 my-3 w-60 rounded-3xl bg-blue-300 text-3xl text-white cursor-pointer hover:scale-110 hover:bg-[#a8d6ff] shadow-[8px_8px_20px_gray,inset_-8px_-8px_8px_#4987b3,inset_6px_6px_16px_white] active:shadow-[inset_8px_8px_8px_#4987b3] active:translate-y-1 duration-300"        onClick={handleClick}>
         Join Room
       </button>
     </>
@@ -48,7 +47,7 @@ const JoinRoomForm = () => {
       <input
         type="text"
         id="joinCodeInput"
-        placeholder="enter your code here:"
+        placeholder="enter your room code here:"
         className="block w-70 h-30 text-center rounded-3xl border-blue-600 border-4 mx-auto"
         onChange={ev => setRoom(ev.target.value)}></input>
       <button
@@ -67,7 +66,7 @@ const JoinRoomForm = () => {
 
 const CancelButton = () => {
   const navigate = useNavigate();
-  const { error, setError } = useError();
+  const { setError } = useError();
   const handleClick = () => {
     setError(' ');
     navigate('/');

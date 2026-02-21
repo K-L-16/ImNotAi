@@ -9,11 +9,26 @@ import { alertDisconnect } from '../utils/alertDisconnect';
 import { useTerminateStatus } from '../stores/useTerminateStatus';
 
 const GameInfo = () => {
+  const { gameStatus } = useGameStatus();
+  useEffect(() => {
+    useGameStatus.getState().setMaxPlayers(4);
+    useGameStatus.getState().setPlayerCount(2);
+    useGameStatus.getState().setRoomCode('1234567890');
+  }, []);
   return (
     <>
-      <p>max number of REAL people: 4</p>
-      <p>invite code: aaa</p>
-      <p>current number of people: 0</p>
+      <div className="grid grid-cols-4 grid-rows-3 w-[85%] h-1/2 mx-auto mt-20">
+        <p className="col-start-1 col-end-5 row-start-1 row-end-3 text-center place-content-center rounded-4xl text-3xl font-mono text-[#666666] bg-gray-300 shadow-[inset_20px_20px_20px_white,inset_-20px_-20px_20px_gray,8px_8px_16px_gray]">
+          room code: {gameStatus.roomCode}
+        </p>
+        <p className="col-start-1 col-end-3 text-center place-content-center rounded-4xl text-2xl font-mono text-[#666666] bg-gray-300 shadow-[inset_20px_20px_20px_white,inset_-20px_-20px_20px_gray,8px_8px_16px_gray]">
+          max number of REAL people: {gameStatus.maxPlayers}
+        </p>
+        <p className="col-start-3 col-end-5 text-center place-content-center rounded-4xl text-2xl font-mono text-[#666666] bg-gray-300 shadow-[inset_20px_20px_20px_white,inset_-20px_-20px_20px_gray,8px_8px_16px_gray]">
+          current number of people: {gameStatus.playerCount}
+        </p>
+      </div>
+      <div className="block w-auto h-1 mt-5 bg-linear-to-r from-white via-black to-white"></div>
     </>
   );
 };
@@ -39,14 +54,25 @@ const StartButton = () => {
     handleEnterRoom();
   };
   return (
-    <>
-      <button onClick={handleClick}>START</button>
-    </>
+    <div className="flex w-screen justify-center">
+      <button
+        onClick={handleClick}
+        className="relative px-5 py-3 mt-3 rounded-3xl group bg-green-500 hover:bg-red-400 hover:scale-110 shadow-[8px_8px_16px_gray,inset_-8px_-8px_16px_green,inset_8px_8px_16px_#ffffff] hover:shadow-[8px_8px_16px_gray,inset_-8px_-8px_16px_red,inset_8px_8px_16px_white] active:shadow-[inset_8px_8px_16px_#ff0000] active:translate-y-1 text-2xl cursor-pointer duration-500">
+        <span className="block group-hover:hidden">START</span>
+        <span className="hidden group-hover:block">
+          Shh! There's an AI among us...
+        </span>
+      </button>
+    </div>
   );
 };
 
 const WaitingMessage = () => {
-  return <p>waiting for the host to start the game...</p>;
+  return (
+    <div className="w-fit mx-auto font-mono mt-2 text-xl">
+      waiting for the host to start the game...
+    </div>
+  );
 };
 
 const handleEnterRoom = () => {
@@ -81,10 +107,10 @@ export const WaitingHallPage = () => {
     }
   }, [useGameStatus.getState().gameStatus.status]);
   return (
-    <>
+    <div className="flex-wrap h-screen w-screen justify-center ">
       <GameInfo />
       {usePlayer.getState().player.isHost && <StartButton />}
       {!usePlayer.getState().player.isHost && <WaitingMessage />}
-    </>
+    </div>
   );
 };
