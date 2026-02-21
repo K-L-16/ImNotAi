@@ -1,14 +1,16 @@
-import { Client, type StompSubscription } from '@stomp/stompjs';
+import { Client } from '@stomp/stompjs';
 import { create } from 'zustand';
 import SockJS from 'sockjs-client';
+import type { Subscription } from '../types/Subscription';
 
 export const useClient = create<{
   client: Client | null;
-  subscriptions: Array<StompSubscription>;
+  subscriptions: Array<Subscription>;
   connect: (url: string) => void;
   disconnect: () => void;
-  addSubscription: (sub: StompSubscription) => void;
+  addSubscription: (sub: Subscription) => void;
   unsubscribeAll: () => void;
+  unsubscribe: (subName: string) => void;
 }>((set, get) => ({
   client: null,
   subscriptions: [],
@@ -31,12 +33,28 @@ export const useClient = create<{
       get().client!.deactivate();
     }
   },
-  addSubscription: (sub: StompSubscription) => {
+  addSubscription: (sub: Subscription) => {
     get().subscriptions.push(sub);
   },
   unsubscribeAll: () => {
     get().subscriptions.forEach(sub => {
-      sub.unsubscribe();
+      sub.sub.unsubscribe();
     });
+    set(() => ({
+      subscriptions: []
+    }));
+  },
+  unsubscribe: (subName: string) => {
+    const subToRemove = get().subscriptions.find(sub => {
+      sub.name == subName;
+    });
+    if (typeof subToRemove != 'undefined') {
+      subToRemove.sub.unsubscribe();
+      set(state => ({
+        subscriptions: state.subscriptions.filter(sub => {
+          sub.name != subName;
+        })
+      }));
+    }
   }
 }));

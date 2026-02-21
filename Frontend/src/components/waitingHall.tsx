@@ -4,6 +4,7 @@ import { useEffect } from 'react';
 import { usePlayer } from '../stores/usePlayer';
 import { useGameStatus } from '../stores/useGameStatus';
 import { useClient } from '../stores/useClient';
+import { subscribeToGameState } from '../utils/subscribes';
 
 const GameInfo = () => {
   return (
@@ -54,34 +55,12 @@ const handleEnterRoom = () => {
 export const WaitingHallPage = () => {
   const {} = useRoom();
   const {} = usePlayer();
-  const roomCode = useRoom.getState().room.roomCode;
-  const {
-    setRoomCode,
-    setStatus,
-    setLocked,
-    setRound,
-    setPlayerCount,
-    setMaxPlayers,
-    setPremise
-  } = useGameStatus();
-  const { connect, addSubscription, unsubscribeAll } = useClient();
+  const {} = useGameStatus();
+  const { connect, unsubscribeAll } = useClient();
   useEffect(() => {
     connect(`${import.meta.env.BASE_URL}/ws`);
     useClient.getState().client!.onConnect = () => {
-      addSubscription(
-        useClient
-          .getState()
-          .client!.subscribe(`/topic/room/${roomCode}/state`, msg => {
-            const state = JSON.parse(msg.body);
-            setRoomCode(state.roomCode);
-            setStatus(state.status);
-            setLocked(state.locked);
-            setRound(state.round);
-            setPlayerCount(state.PlayerCount);
-            setMaxPlayers(state.maxPlayers);
-            setPremise(state.premise);
-          })
-      );
+      subscribeToGameState();
     };
     return () => {
       unsubscribeAll();

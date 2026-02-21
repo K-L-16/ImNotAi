@@ -6,8 +6,12 @@ import { usePlayer } from '../stores/usePlayer';
 import { useMessage } from '../stores/useMessage';
 import { useMessages } from '../stores/useMessages';
 import { useVoteResult } from '../stores/useVoteResult';
-import type { VoteCount } from '../types/VoteCount';
 import { useNavigate } from 'react-router';
+import {
+  subscribeToGameState,
+  subscribeToRoundStatus,
+  subscribeToVoteResult
+} from '../utils/subscribes';
 
 const MessageOutput = () => {
   const { roundStatus } = useRoundStatus();
@@ -123,10 +127,13 @@ const VoteInput = () => {
 };
 
 const VoteOutput = () => {
-  const elimatedID = useVoteResult.getState().voteResult.elimatedID;
-  const tie = useVoteResult.getState().voteResult.tie;
-  const playerID = usePlayer.getState().player.playerID;
-  const status = useGameStatus.getState().gameStatus.status;
+  const { voteResult } = useVoteResult();
+  const { player } = usePlayer();
+  const { gameStatus } = useGameStatus();
+  const elimatedID = voteResult.elimatedID;
+  const tie = voteResult.tie;
+  const playerID = player.playerID;
+  const status = gameStatus.status;
   const { disconnect, unsubscribeAll } = useClient();
   const navigate = useNavigate();
   const handleClick = () => {
@@ -155,63 +162,15 @@ const VoteOutput = () => {
 };
 
 export const RoomPage = () => {
-  const {
-    gameStatus,
-    setRoomCode,
-    setStatus,
-    setLocked,
-    setRound,
-    setPlayerCount,
-    setMaxPlayers,
-    setPremise
-  } = useGameStatus();
-  const { setRoundStatus, setMessages } = useRoundStatus();
-  const { addSubscription, unsubscribeAll, disconnect } = useClient();
-  const { setVoteRound, setVoteCount, setElimatedID, setTie, setReason } =
-    useVoteResult();
-  const roomCode = useGameStatus.getState().gameStatus.roomCode;
+  const { gameStatus } = useGameStatus();
+  const { unsubscribeAll, disconnect } = useClient();
   useEffect(() => {
     // listen to game status change
-    addSubscription(
-      useClient
-        .getState()
-        .client!.subscribe(`/topic/room/${roomCode}/state`, msg => {
-          const state = JSON.parse(msg.body);
-          setRoomCode(state.roomCode);
-          setStatus(state.status);
-          setLocked(state.locked);
-          setRound(state.round);
-          setPlayerCount(state.PlayerCount);
-          setMaxPlayers(state.maxPlayers);
-          setPremise(state.premise);
-        })
-    );
+    subscribeToGameState();
     // listen to round status change
-    addSubscription(
-      useClient
-        .getState()
-        .client!.subscribe(`/topic/room/${roomCode}/round-message`, msg => {
-          const state = JSON.parse(msg.body);
-          setRoundStatus(state.round);
-          setMessages(state.messages);
-        })
-    );
+    subscribeToRoundStatus();
     // listen to vote result
-    addSubscription(
-      useClient
-        .getState()
-        .client!.subscribe(`/topic/room/${roomCode}/vote-result`, msg => {
-          const state = JSON.parse(msg.body);
-          setVoteRound(state.round);
-          const voteCounts = Object.entries(state.voteCount).map(voteCount => {
-            return { playerID: voteCount[0], count: voteCount[1] } as VoteCount;
-          });
-          setVoteCount(voteCounts);
-          setElimatedID(state.elimatedId);
-          setTie(state.tie);
-          setReason(state.reason);
-        })
-    );
+    subscribeToVoteResult();
     return () => {
       unsubscribeAll();
       disconnect();
@@ -223,7 +182,7 @@ export const RoomPage = () => {
       {gameStatus.status == 'VOTING' ? <VoteInput /> : null}
       {gameStatus.status == 'SPEAKING' ? <MessageInput /> : null}
       {gameStatus.status == 'SPEAKING' &&
-      useVoteResult.getState().voteResult.voteRound != 0 ? (
+      useVoteResult.getState().voteResult.voteRound != 1 ? (
         <VoteOutput />
       ) : null}
     </>
