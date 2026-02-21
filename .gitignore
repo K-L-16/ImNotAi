@@ -3,7 +3,7 @@
 *.iml
 
 # build
-target/
+*/target/
 out/
 build/
 
