@@ -16,12 +16,23 @@ const GameInfo = () => {
 };
 
 const StartButton = () => {
-  const navigate = useNavigate();
   const { setRoom } = useRoom();
+  const {} = useClient();
+  const {} = useGameStatus();
+  const {} = usePlayer();
+  const playerID = usePlayer.getState().player.playerID;
   useEffect(() => {
     setRoom('12345');
   }, []);
   const handleClick = () => {
+    useClient.getState().client!.publish({
+      destination: `app/room/${useGameStatus.getState().gameStatus.roomCode}/action`,
+      body: JSON.stringify({
+        type: 'START',
+        playerID,
+        payload: {}
+      })
+    });
     handleEnterRoom();
   };
   return (
@@ -53,7 +64,7 @@ export const WaitingHallPage = () => {
     setMaxPlayers,
     setPremise
   } = useGameStatus();
-  const { connect, disconnect, addSubscription } = useClient();
+  const { connect, addSubscription } = useClient();
   useEffect(() => {
     connect(`${import.meta.env.BASE_URL}/ws`);
     useClient.getState().client!.onConnect = () => {
@@ -71,9 +82,6 @@ export const WaitingHallPage = () => {
             setPremise(state.premise);
           })
       );
-    };
-    return () => {
-      disconnect();
     };
   }, []);
   useEffect(() => {
