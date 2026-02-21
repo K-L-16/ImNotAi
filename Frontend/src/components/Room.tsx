@@ -20,7 +20,7 @@ const messages = [
   { playerID: '1', text: 'abcdefghijklmnopqrstuvwxyzabcd' },
   { playerID: '2', text: 'bbb' },
   { playerID: '3', text: 'ccc' },
-  // { playerID: '4', text: 'ddd' },
+  { playerID: '4', text: 'ddd' },
   { playerID: '5', text: 'eee' }
 ];
 const MessageOutput = () => {
@@ -31,7 +31,7 @@ const MessageOutput = () => {
   const { gameStatus } = useGameStatus();
   useEffect(() => {
     resetVisibleMessage();
-    useGameStatus.getState().setStatus('VOTING')
+    useGameStatus.getState().setStatus('VOTING');
   }, []);
   useEffect(() => {
     if (useGameStatus.getState().gameStatus.status == 'VOTING') {
@@ -48,15 +48,21 @@ const MessageOutput = () => {
       };
     }
   }, [useGameStatus.getState().gameStatus.status]);
+  let playerNum = 0;
   return (
     <div className="flex bg-linear-to-br from-gray-300 to-gray-100 w-1/2 h-60 p-4 rounded-xl text-center align-center mx-auto mt-40 shadow-[8px_8px_16px_gray]">
       <div className="h-fit w-full text-left">
         {gameStatus.status == 'VOTING'
-          ? visibleMessages.map((message, index) => (
-              <div key={index} className="w-full my-2 px-2 py-1 rounded-xl bg-linear-to-r from-white to-80% to-gray-300 ">
-                anonymous {index + 1}: {message.text}
-              </div>
-            ))
+          ? visibleMessages.map(message => {
+              playerNum++;
+              return (
+                <div
+                  key={playerNum}
+                  className="w-full my-2 px-2 py-1 rounded-xl bg-linear-to-r from-white to-80% to-gray-300 ">
+                  anonymous {playerNum}: {message.text}
+                </div>
+              );
+            })
           : 'no messages yet...'}
       </div>
     </div>
@@ -84,19 +90,29 @@ const MessageInput = () => {
       })
     });
   };
+  useEffect(() => {
+    // usePlayer.getState().beElliminated()
+    if(usePlayer.getState().eliminated){
+      setCanSubmit(false);
+    }
+  }, [])
   return (
-    <form onSubmit={handleSubmit}>
-      <input
-        type="text"
-        placeholder="please enter your text here:"
-        maxLength={30}
-        onChange={ev => handleChange(ev.target.value)}></input>
-      <p>note that you can enter up to 30 letters</p>
+    <>
       {canSubmit && (
-        <button type="submit">Submit and... prove you are not AI</button>
+        <form onSubmit={handleSubmit} className="flex-wrap justify-center">
+          <input
+            type="text"
+            id="messageInput"
+            placeholder="please enter your text here:"
+            maxLength={30}
+            onChange={ev => handleChange(ev.target.value)}></input>
+          <p>note that you can enter up to 30 letters</p>
+          <button type="submit">Submit and... prove you are not AI</button>
+        </form>
       )}
+      {usePlayer.getState().eliminated && <div>You have been ELIMINATED!</div>}
       {!canSubmit && <div>Waiting for others to prove they are not AI...</div>}
-    </form>
+    </>
   );
 };
 
@@ -155,6 +171,9 @@ const VoteOutput = () => {
     disconnect();
     navigate('/');
   };
+  if(useVoteResult.getState().voteResult.elimatedID == usePlayer.getState().player.playerID){
+    usePlayer.getState().beElliminated();
+  }
   return (
     <>
       <p>
@@ -208,6 +227,7 @@ export const RoomPage = () => {
     <>
       <MessageOutput />
       <MessageInput />
+      <VoteInput />
       {/* {gameStatus.status == 'VOTING' ? <VoteInput /> : null}
       {gameStatus.status == 'SPEAKING' ? <MessageInput /> : null}
       {gameStatus.status == 'SPEAKING' &&
