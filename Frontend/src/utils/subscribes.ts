@@ -1,6 +1,7 @@
 import { useClient } from '../stores/useClient';
 import { useGameStatus } from '../stores/useGameStatus';
 import { useRoundStatus } from '../stores/useRoundStatus';
+import { useTerminateStatus } from '../stores/useTerminateStatus';
 import { useVoteResult } from '../stores/useVoteResult';
 import type { VoteCount } from '../types/VoteCount';
 
@@ -69,6 +70,22 @@ export const subscribeToVoteResult = () => {
         setElimatedID(state.elimatedId);
         setTie(state.tie);
         setReason(state.reason);
+      })
+  });
+};
+
+export const subscribeToTerminate = () => {
+  const { addSubscription } = useClient();
+  const { setReason, setPlayerID } = useTerminateStatus();
+  const roomCode = useGameStatus.getState().gameStatus.roomCode;
+  addSubscription({
+    name: 'subTerminate',
+    sub: useClient
+      .getState()
+      .client!.subscribe(`topic/room/${roomCode}/terminated`, msg => {
+        const state = JSON.parse(msg.body);
+        setReason(state.reason);
+        setPlayerID(state.playerID);
       })
   });
 };

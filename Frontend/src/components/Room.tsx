@@ -10,8 +10,11 @@ import { useNavigate } from 'react-router';
 import {
   subscribeToGameState,
   subscribeToRoundStatus,
+  subscribeToTerminate,
   subscribeToVoteResult
 } from '../utils/subscribes';
+import { useTerminateStatus } from '../stores/useTerminateStatus';
+import { alertDisconnect } from '../utils/alertDisconnect';
 
 const MessageOutput = () => {
   const { roundStatus } = useRoundStatus();
@@ -164,9 +167,12 @@ const VoteOutput = () => {
 export const RoomPage = () => {
   const { gameStatus } = useGameStatus();
   const { unsubscribeAll, disconnect } = useClient();
+  const {} = useTerminateStatus();
   useEffect(() => {
     // listen to game status change
     subscribeToGameState();
+    // listen to terminate status
+    subscribeToTerminate();
     // listen to round status change
     subscribeToRoundStatus();
     // listen to vote result
@@ -176,6 +182,17 @@ export const RoomPage = () => {
       disconnect();
     };
   }, []);
+  useEffect(() => {
+    if (
+      useGameStatus.getState().gameStatus.status == 'ENDED' &&
+      useTerminateStatus.getState().terminateStatus.reason ==
+        'PLAYER_DISCONNECTED'
+    ) {
+      unsubscribeAll();
+      disconnect();
+      alertDisconnect(useTerminateStatus.getState().terminateStatus.playerID);
+    }
+  }, [useGameStatus.getState().gameStatus.status]);
   return (
     <>
       <MessageOutput />

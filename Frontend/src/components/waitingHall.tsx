@@ -5,6 +5,8 @@ import { usePlayer } from '../stores/usePlayer';
 import { useGameStatus } from '../stores/useGameStatus';
 import { useClient } from '../stores/useClient';
 import { subscribeToGameState } from '../utils/subscribes';
+import { alertDisconnect } from '../utils/alertDisconnect';
+import { useTerminateStatus } from '../stores/useTerminateStatus';
 
 const GameInfo = () => {
   return (
@@ -56,9 +58,12 @@ export const WaitingHallPage = () => {
   const {} = useRoom();
   const {} = usePlayer();
   const {} = useGameStatus();
-  const { connect, unsubscribeAll } = useClient();
+  const { connect, unsubscribeAll, disconnect } = useClient();
+  const { terminateStatus } = useTerminateStatus();
   useEffect(() => {
-    connect(`${import.meta.env.BASE_URL}/ws`);
+    connect(
+      `${import.meta.env.BASE_URL}/ws?roomCode=${useRoom.getState().room.roomCode}&playerId=${usePlayer.getState().player.playerID}`
+    );
     useClient.getState().client!.onConnect = () => {
       subscribeToGameState();
     };
@@ -69,6 +74,10 @@ export const WaitingHallPage = () => {
   useEffect(() => {
     if (useGameStatus.getState().gameStatus.status == 'SPEAKING') {
       handleEnterRoom();
+    } else if (useGameStatus.getState().gameStatus.status == 'ENDED') {
+      unsubscribeAll();
+      disconnect();
+      alertDisconnect(terminateStatus.playerID);
     }
   }, [useGameStatus.getState().gameStatus.status]);
   return (
