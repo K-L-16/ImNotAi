@@ -38,6 +38,7 @@ const StartButton = () => {
   const {} = useClient();
   const {} = useGameStatus();
   const {} = usePlayer();
+  const navigate = useNavigate();
   const playerID = usePlayer.getState().player.playerID;
   useEffect(() => {
     setRoom('12345');
@@ -51,7 +52,7 @@ const StartButton = () => {
         payload: {}
       })
     });
-    handleEnterRoom();
+    navigate(`/room/${useRoom.getState().room.roomCode}`);
   };
   return (
     <div className="flex w-screen justify-center">
@@ -75,17 +76,13 @@ const WaitingMessage = () => {
   );
 };
 
-const handleEnterRoom = () => {
-  const navigate = useNavigate();
-  navigate(`/room/${useRoom.getState().room.roomCode}`);
-};
-
 export const WaitingHallPage = () => {
   const {} = useRoom();
   const {} = usePlayer();
   const {} = useGameStatus();
   const { connect, unsubscribeAll, disconnect } = useClient();
   const { terminateStatus } = useTerminateStatus();
+  const navigate = useNavigate();
   useEffect(() => {
     connect(
       `${import.meta.env.BASE_URL}/ws?roomCode=${useRoom.getState().room.roomCode}&playerId=${usePlayer.getState().player.playerID}`
@@ -99,7 +96,7 @@ export const WaitingHallPage = () => {
   }, []);
   useEffect(() => {
     if (useGameStatus.getState().gameStatus.status == 'SPEAKING') {
-      handleEnterRoom();
+      navigate(`/room/${useRoom.getState().room.roomCode}`);
     } else if (useGameStatus.getState().gameStatus.status == 'ENDED') {
       unsubscribeAll();
       disconnect();

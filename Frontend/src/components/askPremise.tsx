@@ -14,25 +14,21 @@ const AskPremise = () => {
   const handleSubmit = (ev: React.FormEvent<HTMLFormElement>) => {
     setError(' ');
     ev.preventDefault();
-    // api
-    //   .post('/api/rooms', { premise: usePremise.getState().premise })
-    //   .then(response => {
-    //     if (response.data.code == '1') {
-    //       createPlayer(response.data.data.playerId, response.data.data.isHost);
-    //       hostGame();
-    //       setRoom(response.data.data.roomCode);
-    //       navigate(`/waiting-hall/${useRoom.getState().room.roomCode}`);
-    //     } else {
-    //       setError(response.data.msg);
-    //     }
-    //   })
-    //   .catch((error: any) => {
-    //     setError(error.message);
-    //   });
-    createPlayer('123', false);
-    hostGame();
-    setRoom('12345');
-    navigate(`/waiting-hall/${useRoom.getState().room.roomCode}`);
+    api
+      .post('/api/rooms', { premise: usePremise.getState().premise })
+      .then(response => {
+        if (response.data.code == '1') {
+          createPlayer(response.data.data.playerId, response.data.data.isHost);
+          hostGame();
+          setRoom(response.data.data.roomCode);
+          navigate(`/waiting-hall/${useRoom.getState().room.roomCode}`);
+        } else {
+          setError(response.data.msg);
+        }
+      })
+      .catch((error: any) => {
+        setError(error.message);
+      });
   };
   return (
     <form
