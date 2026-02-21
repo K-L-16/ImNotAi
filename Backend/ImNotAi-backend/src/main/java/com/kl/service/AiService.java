@@ -11,6 +11,11 @@ import java.time.Duration;
 import java.util.List;
 import java.util.Map;
 
+/**
+ * AISERVICE
+ * MODEL: OPENROUTER FREE MODEL
+ *
+ */
 @Service
 public class AiService {
 
@@ -22,7 +27,8 @@ public class AiService {
             @Value("${openrouter.baseUrl}") String baseUrl,
             @Value("${openrouter.apiKey}") String apiKey,
             @Value("${openrouter.model}") String model,
-            @Value("${openrouter.timeoutMs}") long timeoutMs
+            @Value("${openrouter.timeoutMs}") long timeoutMs,
+            @Value("${app.frontend-url:http://localhost:5173}") String frontendUrl
     ) {
         this.model = model;
         this.timeoutMs = timeoutMs;
@@ -31,9 +37,10 @@ public class AiService {
                 .baseUrl(baseUrl)
                 .defaultHeader(HttpHeaders.AUTHORIZATION, "Bearer " + apiKey)
                 .defaultHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
-                // OpenRouter 建议带的可选头：用于统计/风控（不带也能跑）
-                .defaultHeader("HTTP-Referer", "http://localhost") // 线上可换成你的前端域名
-                .defaultHeader("X-Title", "WhoIsAI-Hackathon")
+                // HTTP-Referer: OpenRouter 用来统计请求来源和风控，应该指向实际的前端域名
+                .defaultHeader("HTTP-Referer", frontendUrl)
+                // X-Title: 自定义标识，用于 OpenRouter 统计应用信息
+                .defaultHeader("X-Title", "ImNotAi-Backend")
                 .build();
     }
 
@@ -44,7 +51,7 @@ public class AiService {
         String safePremise = premise == null ? "" : premise.trim();
         String context = String.join(" | ", visibleMessages == null ? List.of() : visibleMessages);
 
-        // ✅ 核心：提示词要“像人”、要短、不要暴露自己是 AI
+        //PROMOTE
         String system = """
     You are a real human player in a social deduction chat game, not an AI.
 
@@ -71,7 +78,7 @@ public class AiService {
         Map<String, Object> body = Map.of(
                 "model", model,
                 "temperature", 0.9,
-                "max_tokens", 60, // token 不等于字符，但这里让它别输出太长
+                "max_tokens", 60,
                 "messages", List.of(
                         Map.of("role", "system", "content", system),
                         Map.of("role", "user", "content", user)
@@ -125,7 +132,7 @@ public class AiService {
                 .replace("\r", " ")
                 .trim();
     }
-
+    //IF CAN'T USE AI, USE ANYONE BELOW
     private String fallback(int maxLen) {
         String[] canned = {
                 "I guess that makes sense.",

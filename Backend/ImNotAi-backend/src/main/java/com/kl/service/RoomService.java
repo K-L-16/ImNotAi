@@ -3,16 +3,17 @@ package com.kl.service;
 import com.kl.model.Player;
 import com.kl.model.Room;
 import com.kl.model.RoomStatus;
-import org.jspecify.annotations.NonNull;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 
 import java.security.SecureRandom;
-import java.util.Map;
-import java.util.UUID;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
+/**
+ * ROOM SERVICE
+ */
 @Service
 public class RoomService {
 
@@ -24,7 +25,7 @@ public class RoomService {
     private  SimpMessagingTemplate messagingTemplate; // send message to all front end
 
     @Autowired
-    private AiService aiService;
+    private AiService aiService; // ai service
 
 
 
@@ -47,25 +48,22 @@ public class RoomService {
      * @return
      */
     public Map<String, Object> createRoom(String premise) {
-        //generate the code for the room first
-        String roomCode = generateRoomCode(6);
-        // check if the code is repeate
-        while (rooms.containsKey(roomCode)) {
+        String roomCode;
+        String hostId;
+
+        // synchronized the generate room
+        synchronized (rooms) {
             roomCode = generateRoomCode(6);
+            while (rooms.containsKey(roomCode)) {
+                roomCode = generateRoomCode(6);
+            }
+
+            Room room = new Room(roomCode, premise);
+            hostId = "p_" + UUID.randomUUID().toString().substring(0, 8);
+            Player host = new Player(hostId, true);
+            room.getPlayers().add(host);
+            rooms.put(roomCode, room);
         }
-
-
-        Room room = new Room(roomCode,premise); // init the room
-        //host id
-        String hostId = "p_" + UUID.randomUUID().toString().substring(0,8);
-        // init the player host
-        Player host = new Player(hostId, true);
-        //log info
-        System.out.println(host);
-        // add the host to the room
-        room.getPlayers().add(host);
-        // add the room to the rooms map
-        rooms.put(roomCode, room);
 
         return Map.of(
                 "roomCode", roomCode,
@@ -74,6 +72,7 @@ public class RoomService {
         );
     }
     // ------------------------------------------------------------------------the bulidLobbystatus-------------------------------------
+    // THIS IS THE JSON STRUCTURE RETURN TO THE FRONT END FOR (WS /topic/...../state)
     private Map<String, Object> buildLobbyState(Room room) {
         return Map.of(
                 "roomCode", room.getCode(),
@@ -165,7 +164,7 @@ public class RoomService {
             if (room.getPlayers().size() < 2) {
                 return;
             }
-            // ✅ 插入 AI player（只做一次）/////////////////////////////////////////////////////////
+            // insert AI player（只做一次）/////////////////////////////////////////////////////////
             if (room.getAiId() == null) {
                 String aiId = "ai_" + UUID.randomUUID().toString().substring(0, 8);
                 room.setAiId(aiId);
@@ -228,7 +227,7 @@ public class RoomService {
 
             int got = room.getRoundMessages().size();
 
-            // ✅ 当人类都发完了，但 AI 还没发 → AI 自动发一条
+            //when all human message is collected and we are gona to send human message
             if (got >= humanNeed && room.getAiId() != null && !room.getSpokeThisRound().contains(room.getAiId())) {
                 var visible = room.getRoundMessages().values().stream().toList();
                 String aiText = aiService.generateAiMessage(
@@ -237,11 +236,13 @@ public class RoomService {
                         visible,
                         30
                 );
-                submitMessage(roomCode, room.getAiId(), aiText); // ✅ 关键：AI 也走 submitMessage
-                return; // AI 发完后，会再次进入 submitMessage，再往下走
+                // 直接添加 AI 消息，不递归调用
+                room.getSpokeThisRound().add(room.getAiId());
+                room.getRoundMessages().put(room.getAiId(), aiText);
+                got = room.getRoundMessages().size();
             }
 
-            // ✅ 当所有（人类+AI）都发完才广播整轮
+            // publich the message and state to the client
             int totalNeed = humanNeed + (room.getAiId() == null ? 0 : 1);
             if (got >= totalNeed) {
                 broadcastRoundMessages(room);
@@ -257,15 +258,26 @@ public class RoomService {
         }
     }
 
+    /**
+     * BROAD CAST ALL THE MESSAGE TO THE CLIENT
+     * @param room
+     */
     private void broadcastRoundMessages(Room room) {
         String dest = "/topic/room/" + room.getCode() + "/round-messages";
 
-        // payload: round + messages数组
+        // 将消息转换为列表并打乱顺序
+        var messageList = room.getRoundMessages().entrySet().stream()
+                .map(e -> Map.of("playerId", e.getKey(), "text", e.getValue()))
+                .toList();
+
+        // shuffled message for all the human
+        var shuffledMessages = new java.util.ArrayList<>(messageList);
+        java.util.Collections.shuffle(shuffledMessages, random);
+
+        // payload: round + 打乱后的messages数组
         Object payload = Map.of(
                 "round", room.getRound(),
-                "messages", room.getRoundMessages().entrySet().stream()
-                        .map(e -> Map.of("playerId", e.getKey(), "text", e.getValue()))
-                        .toList()
+                "messages", shuffledMessages
         );
 
         messagingTemplate.convertAndSend(dest, payload);
@@ -308,7 +320,7 @@ public class RoomService {
 
             System.out.println("收到投票: room=" + roomCode + " voter=" + voterId + " target=" + targetId);
 
-            // ✅ AI 也需要投票：当“人类投完”时自动补 AI 一票
+            // after all the human done ai vote
             int humanNeed = (int) room.getPlayers().stream()
                     .filter(p -> !p.getId().startsWith("ai_"))
                     .count();
@@ -317,14 +329,17 @@ public class RoomService {
                     .filter(id -> !id.startsWith("ai_"))
                     .count();
 
-            // 人类投完但 AI 没投 -> AI 自动投（随机投一个不是自己的人）
+            // 人类投完但 AI 没投 -> AI 自动投（直接添加，不递归）
             if (votedHuman >= humanNeed && room.getAiId() != null && !room.getVotedThisRound().contains(room.getAiId())) {
                 String aiVoteTarget = pickRandomVoteTarget(room, room.getAiId());
-                submitVote(roomCode, room.getAiId(), aiVoteTarget);
-                return;
+
+                // 直接添加 AI 投票，不递归调用
+                room.getVotedThisRound().add(room.getAiId());
+                room.getVoteCount().merge(aiVoteTarget, 1, Integer::sum);
+                System.out.println("AI voted: room=" + roomCode + " ai=" + room.getAiId() + " target=" + aiVoteTarget);
             }
 
-            // ✅ 当所有（人类+AI）都投完 -> 结算并广播
+            // 当所有（人类+AI）都投完 -> 结算
             int totalNeed = humanNeed + (room.getAiId() == null ? 0 : 1);
             int got = room.getVotedThisRound().size();
 
@@ -349,35 +364,35 @@ public class RoomService {
     private void finishVoting(Room room) {
         String roomCode = room.getCode();
 
-        // 1) 找最高票
+        // find the max vote
         int max = 0;
         for (int v : room.getVoteCount().values()) {
             if (v > max) max = v;
         }
 
-        // 如果没人投票（理论上不会发生），当作平票跳过
+        // if tie
         if (max == 0) {
             broadcastTieAndNextRound(room, "NO_VOTES");
             return;
         }
 
-        // 2) 找到所有最高票的候选人
+        //  find the high vote
         final int  maxNum = max;
         var top = room.getVoteCount().entrySet().stream()
                 .filter(e -> e.getValue() == maxNum)
                 .map(Map.Entry::getKey)
                 .toList();
 
-        // 3) ✅ 平票：不淘汰，直接下一轮
+        // if tie
         if (top.size() >= 2) {
             broadcastTieAndNextRound(room, "TIE");
             return;
         }
 
-        // 4) 只有一个最高票 -> 淘汰
+        //if only one high vote
         String eliminatedId = top.get(0);
 
-        // 先广播投票结果（一次性）
+        //publich to the client
         messagingTemplate.convertAndSend(
                 "/topic/room/" + roomCode + "/vote-result",
                 (Object)Map.of(
@@ -388,7 +403,7 @@ public class RoomService {
                 )
         );
 
-        // 5) 判断 AI 是否被投出 -> 人类赢
+        // if if the ai is elimite
         if (eliminatedId.equals(room.getAiId())) {
             room.setStatus(RoomStatus.ENDED); //
             // 也可以广播 winner
@@ -401,11 +416,11 @@ public class RoomService {
             return;
         }
 
-        // 6) 淘汰玩家
+        // player is been vote out
         final String elim = eliminatedId;
         room.getPlayers().removeIf(p -> p.getId().equals(elim));
 
-        // 7) AI 胜利条件：只剩 AI + 1 人（淘汰后再算）
+        // AI 胜利条件：只剩 AI + 1 人（淘汰后再算）
         int humanAlive = (int) room.getPlayers().stream()
                 .filter(p -> !p.getId().startsWith("ai_"))
                 .count();
@@ -424,17 +439,17 @@ public class RoomService {
             return;
         }
 
-        // 8) 进入下一轮 SPEAKING
+        //next round turn and state to SPEAKING
         room.setRound(room.getRound() + 1);
         room.setStatus(RoomStatus.SPEAKING);
 
         clearVotingCache(room);
 
-        // 清理发言缓存（别把上一轮带到下一轮）
+        // 清理发言缓存
         room.getRoundMessages().clear();
         room.getSpokeThisRound().clear();
 
-        // 广播 state
+        // publich  state
         messagingTemplate.convertAndSend(
                 "/topic/room/" + roomCode + "/state",
                 (Object)buildLobbyState(room)
@@ -444,7 +459,7 @@ public class RoomService {
     private void broadcastTieAndNextRound(Room room, String reason) {
         String roomCode = room.getCode();
 
-        // 广播 vote-result：tie=true，没有 eliminatedId
+        // publich vote-result：tie=true，没有 eliminatedId
         messagingTemplate.convertAndSend(
                 "/topic/room/" + roomCode + "/vote-result",
                 (Object)Map.of(
@@ -485,28 +500,28 @@ public class RoomService {
         Room room = rooms.get(roomCode);
         if (room == null) return;
 
-        // 已结束就不重复处理
-        if (room.getStatus() == RoomStatus.ENDED) return;
+        synchronized (room) {
+            // check if the game is already end
+            if (room.getStatus() == RoomStatus.ENDED) return;
 
-        room.setStatus(RoomStatus.ENDED);
+            room.setStatus(RoomStatus.ENDED);
 
-        // 你可以把原因发给前端（建议加字段）
-        // 最省事：单独广播一个 event
-        messagingTemplate.convertAndSend(
-                "/topic/room/" + roomCode + "/terminated",
-                (Object) Map.of(
-                        "reason", "PLAYER_DISCONNECTED",
-                        "playerId", playerId
-                )
-        );
+            messagingTemplate.convertAndSend(
+                    "/topic/room/" + roomCode + "/terminated",
+                    (Object) Map.of(
+                            "reason", "PLAYER_DISCONNECTED",
+                            "playerId", playerId
+                    )
+            );
 
-        // 同时也广播 state，让前端切到结束页面
-        messagingTemplate.convertAndSend(
-                "/topic/room/" + roomCode + "/state",
-                (Object) buildLobbyState(room)
-        );
+            // 广播 state，让前端切到结束页面
+            messagingTemplate.convertAndSend(
+                    "/topic/room/" + roomCode + "/state",
+                    (Object) buildLobbyState(room)
+            );
+        }
 
-        // 直接删房间（最干净）
+        // clean up（在同步块外，避免持有锁太久）
         rooms.remove(roomCode);
     }
 }

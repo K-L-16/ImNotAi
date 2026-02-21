@@ -8,5 +8,5 @@ import java.util.Map;
 public class WsAction {
     private String type;      // "START"
     private String playerId;  // who sent that
-    private Map<String, Object> payload; // START 先用不到
+    private Map<String, Object> payload; // START DONT NEED SEND THIS ONLY FOR VOTING AND ROUNDED-MESSAGE
 }
