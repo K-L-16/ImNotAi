@@ -10,6 +10,9 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
+/**
+ * ROOM
+ */
 @Data
 @NoArgsConstructor
 public class Room {

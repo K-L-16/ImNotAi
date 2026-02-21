@@ -8,6 +8,9 @@ import org.springframework.web.socket.WebSocketHandler;
 
 import java.util.Map;
 
+/**
+ * INTERCEPTOR FOE CHOTROLLER WEBSOCKET
+ */
 @Component
 public class WsHandshakeInterceptor implements HandshakeInterceptor {
 

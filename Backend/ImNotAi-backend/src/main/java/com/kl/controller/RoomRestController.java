@@ -9,7 +9,7 @@ import java.util.Map;
 
 @RestController
 @RequestMapping("/api/rooms")
-//@CrossOrigin(origins = "*") // hackathon 先放开，后面再收紧
+//@CrossOrigin(origins = "*") // hackathon test
 public class RoomRestController {
 
     @Autowired
