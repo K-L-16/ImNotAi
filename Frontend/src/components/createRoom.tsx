@@ -6,8 +6,12 @@ export const CreateRoomButton = () => {
     navigate('/ask-premise');
   };
   return (
-    <>
-      <button onClick={handleClick}>Create Room</button>
-    </>
+    <div className="relative flex left-0 w-1/2">
+      <button
+        className="absolute left-[55%] p-3 my-3 w-60 rounded-md bg-blue-300 text-3xl text-white cursor-pointer hover:scale-110 shadow-[8px_8px_20px_gray,inset_-8px_-8px_8px_#4987b3] active:shadow-[inset_8px_8px_8px_#4987b3] active:translate-y-1 duration-300"
+        onClick={handleClick}>
+        Create Room
+      </button>
+    </div>
   );
 };
