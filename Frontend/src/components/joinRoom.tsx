@@ -42,12 +42,20 @@ const JoinRoomForm = () => {
       });
   };
   return (
-    <form onSubmit={handleSubmit}>
+    <form
+      onSubmit={handleSubmit}
+      className="flex-wrap relative w-screen mt-60 justify-center">
       <input
         type="text"
+        id="joinCodeInput"
         placeholder="enter your code here:"
+        className="block w-70 h-30 text-center rounded-3xl border-blue-600 border-4 mx-auto"
         onChange={ev => setRoom(ev.target.value)}></input>
-      <button type="submit">Join</button>
+      <button
+        type="submit"
+        className="absolute left-[60%] w-50 h-fit mt-7 py-3 rounded-xl bg-green-500 hover:bg-green-400 active:bg-green-400 hover:scale-110 shadow-[8px_8px_16px_gray,inset_-8px_-8px_16px_green] active:shadow-[inset_8px_8px_16px_green] active:translate-y-1 cursor-pointer text-3xl font-mono text-white text-shadow-black ">
+        Join
+      </button>
       {useError.getState().error != ' ' && (
         <p>Oops, something goes wrong - {useError.getState().error}</p>
       )}
@@ -62,7 +70,11 @@ const CancelButton = () => {
   };
   return (
     <>
-      <button onClick={handleClick}>Cancel</button>
+      <button
+        onClick={handleClick}
+        className="absolute left-[28%] w-50 h-fit mt-7 py-3 rounded-xl bg-red-400 hover:bg-[#ff7575] active:bg-[#ff7575] hover:scale-110 shadow-[8px_8px_16px_gray,inset_-8px_-8px_16px_red] active:shadow-[inset_8px_8px_16px_red] active:translate-y-1 cursor-pointer text-3xl font-mono text-white text-shadow-black ">
+        Cancel
+      </button>
     </>
   );
 };
