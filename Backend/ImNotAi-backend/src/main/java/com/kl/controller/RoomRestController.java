@@ -28,13 +28,34 @@ public class RoomRestController {
     }
 
     /**
-     * join room
+     * Check if room exists and can be joined (safe operation, no state modification)
+     * Used to validate room before establishing WebSocket connection
      */
-    @PostMapping("/{roomCode}/join")
-    public Result joinRoom(@PathVariable String roomCode){
+    @GetMapping("/{roomCode}/check")
+    public Result checkRoom(@PathVariable String roomCode) {
+        Map<String, Object> checkResult = roomService.checkRoom(roomCode);
+
+        if (checkResult.containsKey("error")) {
+            return Result.error((String) checkResult.get("error"));
+        }
+
+        return Result.success(checkResult);
+    }
+
+    /**
+     * join room
+     * 接收前端从 CHECK 端点获得的 playerId
+     */
+    @PostMapping("/{roomCode}/{playerId}join")
+    public Result joinRoom(@PathVariable String roomCode, @PathVariable String playerId){
+
+
+        if (playerId == null || playerId.isEmpty()) {
+            return Result.error("MISSING_PLAYER_ID");
+        }
 
         // try get the data from the room
-        Map<String, Object> data = roomService.joinRoom(roomCode);
+        Map<String, Object> data = roomService.joinRoom(roomCode, playerId);
         // can't find the room
         if (data == null) {
             return Result.error("ROOM_NOT_FOUND");

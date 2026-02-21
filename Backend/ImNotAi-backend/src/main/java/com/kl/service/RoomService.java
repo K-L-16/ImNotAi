@@ -86,18 +86,71 @@ public class RoomService {
     }
     // ------------------------------------------------------------------------the bulidLobbystatus-------------------------------------
 
+    /**
+     * Check room status without modifying it
+     * Safe operation - doesn't lock or modify the room
+     * Returns:
+     * - If room exists and joinable: {canJoin: true, status, playerCount, maxPlayers, premise, playerId}
+     * - If not: {error: "ROOM_NOT_FOUND"|"ROOM_LOCKED"|"ROOM_FULL"}
+     *
+     * playerId 在 CHECK 时就生成，前端在 WebSocket 连接和 JOIN 时使用同一个 playerId
+     */
+    public Map<String, Object> checkRoom(String roomCode) {
+        Room room = rooms.get(roomCode);
 
+        // room not exist
+        if (room == null) {
+            return Map.of("error", "ROOM_NOT_FOUND");
+        }
+
+        // locked
+        if (room.isLocked()) {
+            return Map.of(
+                "error", "ROOM_LOCKED",
+                "reason", "Game has already started",
+                "currentStatus", room.getStatus().name(),
+                "currentRound", room.getRound()
+            );
+        }
+
+        // room full
+        if (room.getPlayers().size() >= room.getMaxPlayers()) {
+            return Map.of(
+                "error", "ROOM_FULL",
+                "reason", "Room is at max capacity",
+                "playerCount", room.getPlayers().size(),
+                "maxPlayers", room.getMaxPlayers()
+            );
+        }
+
+        // can join 生成 playerId
+        String playerId = "p_" + UUID.randomUUID().toString().substring(0, 8);
+        System.out.println("✅ [CHECK SUCCESS] roomCode: " + roomCode + ", playerId: " + playerId);
+
+        return Map.of(
+            "canJoin", true,
+            "status", room.getStatus().name(),
+            "playerCount", room.getPlayers().size(),
+            "maxPlayers", room.getMaxPlayers(),
+            "premise", room.getPremise(),
+            "locked", false,
+            "playerId", playerId  // ← 返回给前端用于 WebSocket 连接
+        );
+    }
 
     /**
      * join the room for the new player
+     * 接收前端传来的 playerId（从 CHECK 端点获得）
      * @param roomCode
+     * @param playerId 从 CHECK 端点返回的 playerId
      * @return
      */
-    public Map<String, Object> joinRoom(String roomCode) {
+    public Map<String, Object> joinRoom(String roomCode, String playerId) {
         //try to get the room first
         Room room = rooms.get(roomCode);
         //if the room does not exist
         if (room == null) {
+            System.out.println("[JOIN FAILED] room not found - roomCode: " + roomCode);
             return null;
         }
 
@@ -105,16 +158,20 @@ public class RoomService {
 
             // the room is locked (game already start)
             if(room.isLocked()) {
+                System.out.println("[JOIN FAILED] room locked - roomCode: " + roomCode +
+                                 ", status: " + room.getStatus().name() + ", round: " + room.getRound());
                 return Map.of("error", "ROOM_LOCKED");
             }
 
             // it's full
             if(room.getPlayers().size() >= room.getMaxPlayers()) {
+                System.out.println("[JOIN FAILED] room full - roomCode: " + roomCode +
+                                 ", playerCount: " + room.getPlayers().size() +
+                                 "/" + room.getMaxPlayers());
                 return Map.of("error", "ROOM_FULL");
             }
 
-            //create the player
-            String playerId = "p_" + UUID.randomUUID().toString().substring(0, 8);
+            // 使用前端传来的 playerId，不生成新的
             Player player = new Player(playerId, false);//false means this is not the host
             room.getPlayers().add(player); //add the palyer to the room
 
@@ -122,9 +179,8 @@ public class RoomService {
             String dest = "/topic/room/" + roomCode + "/state";
             Object payload = buildLobbyState(room);
             messagingTemplate.convertAndSend(dest, payload);
-            System.out.println("send the message to the all subscribe for room "+ roomCode);
-
-            System.out.println("the num of player in " +roomCode +" " +room.getPlayers().size());//log out the number of the player
+            System.out.println("[JOIN SUCCESS] playerId: " + playerId + ", roomCode: " + roomCode +
+                             ", playerCount: " + room.getPlayers().size());
 
             return Map.of(
                     "roomCode", roomCode,
