@@ -3,6 +3,8 @@ import { useRoom } from '../stores/useRoom';
 import { api } from '../stores/api';
 import { useError } from '../stores/useError';
 import { usePlayer } from '../stores/usePlayer';
+import { useGameStatus } from '../stores/useGameStatus';
+import { useClient } from '../stores/useClient';
 
 export const JoinRoomButton = () => {
   const navigate = useNavigate();
@@ -25,13 +27,34 @@ const JoinRoomForm = () => {
   const { setRoom } = useRoom();
   const { setError } = useError();
   const { createPlayer } = usePlayer();
+  const { setRoomCode } = useGameStatus();
   const handleSubmit = (ev: React.FormEvent<HTMLFormElement>) => {
     ev.preventDefault();
+    const roomCode = useRoom.getState().room.roomCode;
     api
-      .post(`/${useRoom.getState().room.roomCode}/join`)
+      .post(`${import.meta.env.VITE_API_URL}/api/rooms/${roomCode}/join`, {
+        roomCode: roomCode
+      })
+      .then(response => {
+        createPlayer(response.data.data.playerId, false);
+        setRoomCode(roomCode);
+        useClient
+          .getState()
+          .connect(
+            `${import.meta.env.VITE_API_URL}/ws?roomCode=${roomCode}&playerId=${usePlayer.getState().player.playerID}`
+          );
+      })
+      .catch((error: any) => {
+        alert(error.message);
+      });
+    api
+      .post(
+        `${import.meta.env.VITE_API_URL}/api/rooms/${useRoom.getState().room.roomCode}/${usePlayer.getState().player.playerID}/join`
+      )
       .then(response => {
         if (response.data.code == 1) {
           createPlayer(response.data.data.playerId, response.data.data.isHost);
+          setRoomCode(response.data.data.roomCode);
           navigate(`/waiting-hall/${useRoom.getState().room.roomCode}`);
         } else {
           setError(response.data.msg);

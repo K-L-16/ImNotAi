@@ -7,14 +7,15 @@ import { useMessage } from '../stores/useMessage';
 import { useMessages } from '../stores/useMessages';
 import { useVoteResult } from '../stores/useVoteResult';
 import { useNavigate } from 'react-router';
-import {
-  subscribeToGameState,
-  subscribeToRoundStatus,
-  subscribeToTerminate,
-  subscribeToVoteResult
-} from '../utils/subscribes';
+// import {
+//   subscribeToGameState,
+//   subscribeToRoundStatus,
+//   subscribeToTerminate,
+//   subscribeToVoteResult
+// } from '../utils/subscribes';
 import { useTerminateStatus } from '../stores/useTerminateStatus';
 import { alertDisconnect } from '../utils/alertDisconnect';
+import type { VoteCount } from '../types/VoteCount';
 
 const MessageOutput = () => {
   const { roundStatus } = useRoundStatus();
@@ -211,15 +212,80 @@ export const RoomPage = () => {
   const { gameStatus } = useGameStatus();
   const { unsubscribeAll, disconnect } = useClient();
   const {} = useTerminateStatus();
+  const { setRoundStatus, setMessages } = useRoundStatus();
+  const { addSubscription } = useClient();
+  const {
+    setRoomCode,
+    setStatus,
+    setLocked,
+    setRound,
+    setPlayerCount,
+    setMaxPlayers,
+    setPremise
+  } = useGameStatus();
+  const { setReasonStatus, setPlayerID } = useTerminateStatus();
+  const { setVoteRound, setVoteCount, setElimatedID, setTie, setReason } =
+    useVoteResult();
   useEffect(() => {
     // listen to game status change
-    subscribeToGameState();
+    const roomCode = useGameStatus.getState().gameStatus.roomCode;
+    // listen to game status change
+    addSubscription({
+      name: 'subGameState',
+      sub: useClient
+        .getState()
+        .client!.subscribe(`/topic/room/${roomCode}/state`, msg => {
+          const state = JSON.parse(msg.body);
+          setRoomCode(state.roomCode);
+          setStatus(state.status);
+          setLocked(state.locked);
+          setRound(state.round);
+          setPlayerCount(state.PlayerCount);
+          setMaxPlayers(state.maxPlayers);
+          setPremise(state.premise);
+        })
+    });
     // listen to terminate status
-    subscribeToTerminate();
+
+    addSubscription({
+      name: 'subTerminate',
+      sub: useClient
+        .getState()
+        .client!.subscribe(`topic/room/${roomCode}/terminated`, msg => {
+          const state = JSON.parse(msg.body);
+          setReason(state.reason);
+          setPlayerID(state.playerID);
+        })
+    });
     // listen to round status change
-    subscribeToRoundStatus();
+    addSubscription({
+      name: 'subRoundState',
+      sub: useClient
+        .getState()
+        .client!.subscribe(`/topic/room/${roomCode}/round-message`, msg => {
+          const state = JSON.parse(msg.body);
+          setRoundStatus(state.round);
+          setMessages(state.messages);
+        })
+    });
     // listen to vote result
-    subscribeToVoteResult();
+
+    addSubscription({
+      name: 'subVoteResult',
+      sub: useClient
+        .getState()
+        .client!.subscribe(`/topic/room/${roomCode}/vote-result`, msg => {
+          const state = JSON.parse(msg.body);
+          setVoteRound(state.round);
+          const voteCounts = Object.entries(state.voteCount).map(voteCount => {
+            return { playerID: voteCount[0], count: voteCount[1] } as VoteCount;
+          });
+          setVoteCount(voteCounts);
+          setElimatedID(state.elimatedId);
+          setTie(state.tie);
+          setReasonStatus(state.reason);
+        })
+    });
     return () => {
       unsubscribeAll();
       disconnect();

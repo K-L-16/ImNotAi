@@ -18,11 +18,13 @@ export const useClient = create<{
     if (get().client == null) {
       const clientSet = new Client({
         webSocketFactory: () => new SockJS(url),
-        reconnectDelay: 5000
+        reconnectDelay: 5000,
+        brokerURL: import.meta.env.VITE_BACKEND_WS_URL
       });
       set(() => ({
         client: clientSet
       }));
+      get().client!.activate();
     }
   },
   disconnect: () => {

@@ -3,14 +3,14 @@ import type { TerminateStatus } from '../types/TerminateStatus';
 
 export const useTerminateStatus = create<{
   terminateStatus: TerminateStatus;
-  setReason: (reasonSet: string) => void;
+  setReasonStatus: (reasonSet: string) => void;
   setPlayerID: (playerIDSet: string) => void;
 }>(set => ({
   terminateStatus: {
     reason: '',
     playerID: ''
   },
-  setReason: (reasonSet: string) => {
+  setReasonStatus: (reasonSet: string) => {
     set(state => ({
       terminateStatus: {
         ...state.terminateStatus,

@@ -4,7 +4,7 @@ import { useEffect } from 'react';
 import { usePlayer } from '../stores/usePlayer';
 import { useGameStatus } from '../stores/useGameStatus';
 import { useClient } from '../stores/useClient';
-import { subscribeToGameState } from '../utils/subscribes';
+// import { subscribeToGameState } from '../utils/subscribes';
 import { alertDisconnect } from '../utils/alertDisconnect';
 import { useTerminateStatus } from '../stores/useTerminateStatus';
 
@@ -74,16 +74,45 @@ const WaitingMessage = () => {
 export const WaitingHallPage = () => {
   const {} = useRoom();
   const {} = usePlayer();
-  const {} = useGameStatus();
   const { connect, unsubscribeAll, disconnect } = useClient();
   const { terminateStatus } = useTerminateStatus();
   const navigate = useNavigate();
+  const { addSubscription } = useClient();
+  // const {
+  //   setRoomCode,
+  //   setStatus,
+  //   setLocked,
+  //   setRound,
+  //   setPlayerCount,
+  //   setMaxPlayers,
+  //   setPremise
+  // } = useGameStatus();
   useEffect(() => {
     connect(
-      `${import.meta.env.BASE_URL}/ws?roomCode=${useRoom.getState().room.roomCode}&playerId=${usePlayer.getState().player.playerID}`
+      `${import.meta.env.VITE_API_URL}/ws?roomCode=${useRoom.getState().room.roomCode}&playerId=${usePlayer.getState().player.playerID}`
     );
     useClient.getState().client!.onConnect = () => {
-      subscribeToGameState();
+      const roomCode = useGameStatus.getState().gameStatus.roomCode;
+      // listen to game status change
+      useClient.getState().addSubscription({
+        name: 'subGameState',
+        sub: useClient
+          .getState()
+          .client!.subscribe(`/ws/topic/room/${roomCode}/state`, msg => {
+            const state = JSON.parse(msg.body);
+            useGameStatus.getState().setRoomCode(state.roomCode);
+            useGameStatus.getState().setStatus(state.status);
+            useGameStatus.getState().setLocked(state.locked);
+            useGameStatus.getState().setRound(state.round);
+            useGameStatus.getState().setPlayerCount(state.PlayerCount);
+            useGameStatus.getState().setMaxPlayers(state.maxPlayers);
+            useGameStatus.getState().setPremise(state.premise);
+          })
+      });
+      if (usePlayer.getState().player.isHost) {
+        useGameStatus.getState().setMaxPlayers(4);
+        useGameStatus.getState().setPlayerCount(1);
+      }
     };
     return () => {
       unsubscribeAll();
