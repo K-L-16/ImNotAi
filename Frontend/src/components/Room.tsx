@@ -16,14 +16,22 @@ import {
 import { useTerminateStatus } from '../stores/useTerminateStatus';
 import { alertDisconnect } from '../utils/alertDisconnect';
 
+const messages = [
+  { playerID: '1', text: 'abcdefghijklmnopqrstuvwxyzabcd' },
+  { playerID: '2', text: 'bbb' },
+  { playerID: '3', text: 'ccc' },
+  // { playerID: '4', text: 'ddd' },
+  { playerID: '5', text: 'eee' }
+];
 const MessageOutput = () => {
   const { roundStatus } = useRoundStatus();
-  const messages = roundStatus.messages;
+  // const messages = roundStatus.messages;
   const { visibleMessages, addVisibleMessage, resetVisibleMessage } =
     useMessages();
   const { gameStatus } = useGameStatus();
   useEffect(() => {
     resetVisibleMessage();
+    useGameStatus.getState().setStatus('VOTING')
   }, []);
   useEffect(() => {
     if (useGameStatus.getState().gameStatus.status == 'VOTING') {
@@ -34,24 +42,24 @@ const MessageOutput = () => {
         if (idx >= messages.length) {
           clearInterval(timer);
         }
-      }, 1000);
+      }, 1500);
       return () => {
         clearInterval(timer);
       };
     }
   }, [useGameStatus.getState().gameStatus.status]);
   return (
-    <>
-      <div>
+    <div className="flex bg-linear-to-br from-gray-300 to-gray-100 w-1/2 h-60 p-4 rounded-xl text-center align-center mx-auto mt-40 shadow-[8px_8px_16px_gray]">
+      <div className="h-fit w-full text-left">
         {gameStatus.status == 'VOTING'
           ? visibleMessages.map((message, index) => (
-              <div key={index}>
-                anonymous player {index + 1}: {message.text}
+              <div key={index} className="w-full my-2 px-2 py-1 rounded-xl bg-linear-to-r from-white to-80% to-gray-300 ">
+                anonymous {index + 1}: {message.text}
               </div>
             ))
           : 'no messages yet...'}
       </div>
-    </>
+    </div>
   );
 };
 
@@ -168,43 +176,44 @@ const VoteOutput = () => {
 };
 
 export const RoomPage = () => {
-  const { gameStatus } = useGameStatus();
-  const { unsubscribeAll, disconnect } = useClient();
-  const {} = useTerminateStatus();
-  useEffect(() => {
-    // listen to game status change
-    subscribeToGameState();
-    // listen to terminate status
-    subscribeToTerminate();
-    // listen to round status change
-    subscribeToRoundStatus();
-    // listen to vote result
-    subscribeToVoteResult();
-    return () => {
-      unsubscribeAll();
-      disconnect();
-    };
-  }, []);
-  useEffect(() => {
-    if (
-      useGameStatus.getState().gameStatus.status == 'ENDED' &&
-      useTerminateStatus.getState().terminateStatus.reason ==
-        'PLAYER_DISCONNECTED'
-    ) {
-      unsubscribeAll();
-      disconnect();
-      alertDisconnect(useTerminateStatus.getState().terminateStatus.playerID);
-    }
-  }, [useGameStatus.getState().gameStatus.status]);
+  // const { gameStatus } = useGameStatus();
+  // const { unsubscribeAll, disconnect } = useClient();
+  // const {} = useTerminateStatus();
+  // useEffect(() => {
+  //   // listen to game status change
+  //   subscribeToGameState();
+  //   // listen to terminate status
+  //   subscribeToTerminate();
+  //   // listen to round status change
+  //   subscribeToRoundStatus();
+  //   // listen to vote result
+  //   subscribeToVoteResult();
+  //   return () => {
+  //     unsubscribeAll();
+  //     disconnect();
+  //   };
+  // }, []);
+  // useEffect(() => {
+  //   if (
+  //     useGameStatus.getState().gameStatus.status == 'ENDED' &&
+  //     useTerminateStatus.getState().terminateStatus.reason ==
+  //       'PLAYER_DISCONNECTED'
+  //   ) {
+  //     unsubscribeAll();
+  //     disconnect();
+  //     alertDisconnect(useTerminateStatus.getState().terminateStatus.playerID);
+  //   }
+  // }, [useGameStatus.getState().gameStatus.status]);
   return (
     <>
       <MessageOutput />
-      {gameStatus.status == 'VOTING' ? <VoteInput /> : null}
+      <MessageInput />
+      {/* {gameStatus.status == 'VOTING' ? <VoteInput /> : null}
       {gameStatus.status == 'SPEAKING' ? <MessageInput /> : null}
       {gameStatus.status == 'SPEAKING' &&
       useVoteResult.getState().voteResult.voteRound != 1 ? (
         <VoteOutput />
-      ) : null}
+      ) : null} */}
     </>
   );
 };
