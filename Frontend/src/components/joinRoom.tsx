@@ -57,7 +57,9 @@ const JoinRoomForm = () => {
         Join
       </button>
       {useError.getState().error != ' ' && (
-        <p className="absolute w-screen text-center left-1/2 -translate-x-1/2 font-mono">Oops, something goes wrong - {useError.getState().error}</p>
+        <p className="absolute w-screen text-center left-1/2 -translate-x-1/2 font-mono">
+          Oops, something goes wrong - {useError.getState().error}
+        </p>
       )}
     </form>
   );
@@ -65,7 +67,9 @@ const JoinRoomForm = () => {
 
 const CancelButton = () => {
   const navigate = useNavigate();
+  const { error, setError } = useError();
   const handleClick = () => {
+    setError(' ');
     navigate('/');
   };
   return (
