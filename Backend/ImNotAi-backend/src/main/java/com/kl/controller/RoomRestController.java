@@ -46,7 +46,7 @@ public class RoomRestController {
      * join room
      * 接收前端从 CHECK 端点获得的 playerId
      */
-    @PostMapping("/{roomCode}/{playerId}join")
+    @PostMapping("/{roomCode}/{playerId}/join")
     public Result joinRoom(@PathVariable String roomCode, @PathVariable String playerId){
 
 
