@@ -4,12 +4,12 @@ import { usePremise } from '../stores/usePremise';
 import { usePlayer } from '../stores/usePlayer';
 import { useRoom } from '../stores/useRoom';
 import { useError } from '../stores/useError';
+import { useGameStatus } from '../stores/useGameStatus';
 
 const AskPremise = () => {
   const { setPremise } = usePremise();
   const navigate = useNavigate();
   const { createPlayer, hostGame } = usePlayer();
-  const { setRoom } = useRoom();
   const { setError } = useError();
   const handleSubmit = (ev: React.FormEvent<HTMLFormElement>) => {
     setError(' ');
@@ -20,7 +20,7 @@ const AskPremise = () => {
         if (response.data.code == 1) {
           createPlayer(response.data.data.playerId, response.data.data.isHost);
           hostGame();
-          setRoom(response.data.data.roomCode);
+          useGameStatus.getState().setRoomCode(response.data.data.roomCode);
           navigate(`/waiting-hall/${useRoom.getState().room.roomCode}`);
         } else {
           setError(response.data.msg);
