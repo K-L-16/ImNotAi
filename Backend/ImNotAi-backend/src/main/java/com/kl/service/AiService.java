@@ -28,10 +28,19 @@ public class AiService {
             @Value("${openrouter.apiKey}") String apiKey,
             @Value("${openrouter.model}") String model,
             @Value("${openrouter.timeoutMs}") long timeoutMs,
-            @Value("${app.frontend-url:http://localhost:5173}") String frontendUrl
+            @Value("${app.frontend-url:}") String frontendUrl
     ) {
         this.model = model;
         this.timeoutMs = timeoutMs;
+
+        // 日志：记录配置信息
+        System.out.println("   - AiService 初始化");
+        System.out.println("   - OpenRouter BaseURL: " + baseUrl);
+        System.out.println("   - Model: " + model);
+        System.out.println("   - Timeout: " + timeoutMs + "ms");
+        System.out.println("   - Frontend URL: " + (frontendUrl.isEmpty() ? "[未设置]" : frontendUrl));
+        System.out.println("   - API Key: " + (apiKey == null || apiKey.isEmpty() ? "[未设置]" : apiKey.substring(0, 20) + "..."));
+
 
         this.webClient = WebClient.builder()
                 .baseUrl(baseUrl)
@@ -50,6 +59,8 @@ public class AiService {
     public String generateAiMessage(String premise, int round, List<String> visibleMessages, int maxLen) {
         String safePremise = premise == null ? "" : premise.trim();
         String context = String.join(" | ", visibleMessages == null ? List.of() : visibleMessages);
+
+        System.out.println("[AI] 开始生成消息 - 轮次: " + round + ", 前提: " + safePremise);
 
         //PROMOTE
         String system = """
@@ -86,27 +97,53 @@ public class AiService {
         );
 
         try {
+            System.out.println("[AI] 发送请求到 OpenRouter...");
+            long startTime = System.currentTimeMillis();
+
             Map<?, ?> resp = webClient.post()
                     .uri("/chat/completions")
                     .bodyValue(body)
                     .retrieve()
                     .bodyToMono(Map.class)
                     .timeout(Duration.ofMillis(timeoutMs))
-                    .onErrorResume(e -> Mono.empty())
+                    .onErrorResume(e -> {
+                        long elapsed = System.currentTimeMillis() - startTime;
+                        System.err.println("   [AI] OpenRouter 调用失败 (耗时: " + elapsed + "ms)");
+                        System.err.println("   错误类型: " + e.getClass().getSimpleName());
+                        System.err.println("   错误信息: " + e.getMessage());
+                        if (e.getCause() != null) {
+                            System.err.println("   原因: " + e.getCause().getMessage());
+                        }
+                        e.printStackTrace();
+                        return Mono.empty();
+                    })
                     .block();
+
+            long elapsed = System.currentTimeMillis() - startTime;
+            System.out.println("[AI] 收到响应 (耗时: " + elapsed + "ms)");
+
+            if (resp == null) {
+                System.out.println("[AI] 响应为 null，使用 fallback");
+                return fallback(maxLen);
+            }
 
             String text = extractContent(resp);
             text = normalize(text);
 
             if (text.isBlank()) {
+                System.out.println("[AI] 响应内容为空，使用 fallback");
                 return fallback(maxLen);
             }
             if (text.length() > maxLen) {
                 text = text.substring(0, maxLen);
             }
+
+            System.out.println("[AI] 生成成功: " + text);
             return text;
 
         } catch (Exception e) {
+            System.err.println("[AI] 异常: " + e.getClass().getSimpleName() + " - " + e.getMessage());
+            e.printStackTrace();
             return fallback(maxLen);
         }
     }

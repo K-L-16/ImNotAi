@@ -5,10 +5,10 @@ spring:
         port: ${PORT:8080}
 
 openrouter:
-    apiKey: ${OPENROUTER_API_KEY}
+    apiKey: ${OPENROUTER_API_KEY:}
     baseUrl: https://openrouter.ai/api/v1
     model: arcee-ai/trinity-large-preview:free
-    timeoutMs: 8000
+    timeoutMs: ${OPENROUTER_TIMEOUT_MS:15000}
 
 app:
     frontend-url: ${FRONTEND_URL:http://localhost:5173}
